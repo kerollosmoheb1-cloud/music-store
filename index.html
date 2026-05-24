@@ -233,6 +233,26 @@
       box-shadow: 0 0 0 1.5px rgba(0,194,203,0.4), 0 12px 48px rgba(0,194,203,0.15), 0 8px 40px rgba(0,0,0,0.35);
     }
 
+    .plans-carousel-slide .plan-card {
+      transition: transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  box-shadow 0.38s ease,
+                  border-color 0.38s ease,
+                  opacity 0.3s ease;
+    }
+
+    .plans-carousel-slide .plan-card.card-active {
+      transform: scale(1.04) !important;
+      border-color: var(--cyan) !important;
+      box-shadow: 0 0 0 2px var(--cyan), 0 0 32px rgba(0,194,203,0.45), 0 12px 40px rgba(0,0,0,0.35) !important;
+      z-index: 2;
+      background: linear-gradient(145deg, #0f1835 0%, #0a1830 100%) !important;
+    }
+
+    .plans-carousel-slide .plan-card.card-dimmed {
+      transform: scale(0.97) !important;
+      opacity: 0.65 !important;
+    }
+
     .plans-carousel-slide .plan-name { font-size: 16px; margin-bottom: 1.2rem; }
     .plans-carousel-slide .plan-price { font-size: 56px; }
     .plans-carousel-slide .plan-price sub { font-size: 18px; }
@@ -249,6 +269,7 @@
       align-items: center;
       gap: 8px;
       margin-top: 1.4rem;
+      direction: ltr;
     }
 
     .plans-dot {
@@ -1113,6 +1134,35 @@ planCards.forEach(card => {
   });
 });
 
+// Mobile tap detection on carousel cards (touch events are consumed by swipe handler,
+// so we detect a clean tap: touchstart + touchend with minimal movement)
+(function() {
+  var carouselCards = document.querySelectorAll('.plans-carousel-slide .plan-card');
+  carouselCards.forEach(function(card) {
+    var tapStartX = 0, tapStartY = 0, tapStartTime = 0;
+    card.addEventListener('touchstart', function(e) {
+      tapStartX = e.touches[0].clientX;
+      tapStartY = e.touches[0].clientY;
+      tapStartTime = Date.now();
+    }, { passive: true });
+    card.addEventListener('touchend', function(e) {
+      if (e.target.classList.contains('plan-btn') || e.target.closest('.plan-btn')) return;
+      var dx = Math.abs((e.changedTouches[0].clientX) - tapStartX);
+      var dy = Math.abs((e.changedTouches[0].clientY) - tapStartY);
+      var dt = Date.now() - tapStartTime;
+      // Only treat as a tap if minimal movement and short duration
+      if (dx < 10 && dy < 10 && dt < 350) {
+        var isAlreadyActive = card.classList.contains('card-active');
+        planCards.forEach(function(c) { c.classList.remove('card-active', 'card-dimmed'); });
+        if (!isAlreadyActive) {
+          card.classList.add('card-active');
+          carouselCards.forEach(function(c) { if (c !== card) c.classList.add('card-dimmed'); });
+        }
+      }
+    }, { passive: true });
+  });
+})();
+
 // Universal IntersectionObserver for scroll reveal
 const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach(e => {
@@ -1217,17 +1267,17 @@ if(carouselTrack) {
     if (isVertical) return;
     e.preventDefault();
     dragDelta = dx;
-    // LTR forced: swipe left (dx negative) = advance to next card
-    track.style.transform = 'translateX(' + (-(current * W()) + dx) + 'px)';
+    // RTL natural: swipe right (dx positive) = advance to next card
+    track.style.transform = 'translateX(' + (-(current * W()) - dx) + 'px)';
   }, { passive: false });
 
   wrap.addEventListener('touchend', function() {
     if (!isDragging || isVertical) { isDragging = false; return; }
     isDragging = false;
     var threshold = W() * 0.2;
-    // dx negative = swiped left = go to next slide
-    if (dragDelta < -threshold)      goTo(current + 1);
-    else if (dragDelta > threshold)  goTo(current - 1);
+    // RTL: dx positive = swiped right = go to next slide
+    if (dragDelta > threshold)       goTo(current + 1);
+    else if (dragDelta < -threshold) goTo(current - 1);
     else                             goTo(current);
   });
 
