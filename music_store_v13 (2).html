@@ -62,7 +62,7 @@
   .section-title { text-align: center; font-size: 24px; font-weight: 700; margin-bottom: .4rem; }
   .section-sub { text-align: center; font-size: 14px; color: var(--muted); margin-bottom: 2rem; }
   .plans-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; overflow: visible; }
-  .plan-card { background: var(--muted2); border: 1.5px solid #2a3f55; border-radius: 18px; padding: 1.8rem 1.4rem; text-align: center; position: relative; overflow: visible; transition: transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease, opacity .3s ease; }
+  .plan-card { background: var(--muted2); border: 1.5px solid #2a3f55; border-radius: 18px; padding: 1.8rem 1.4rem; text-align: center; position: relative; overflow: visible; transition: transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease, opacity .3s ease; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; cursor: pointer; }
   .plan-card:hover { transform: translateY(-3px); }
   .plan-card.card-active { transform: scale(1.03); box-shadow: 0 0 0 2px var(--cyan), 0 0 28px rgba(0,194,203,0.35), 0 8px 32px rgba(0,0,0,0.3); z-index: 2; }
   .plan-card.card-dimmed { transform: scale(0.97); opacity: 0.72; }
@@ -115,7 +115,8 @@
   .review-name { font-size: 14px; font-weight: 700; color: #fff; }
   .review-text { font-size: 13px; color: var(--muted); line-height: 1.7; }
   .review-hearts { color: #e74c3c; font-size: 13px; margin-top: 8px; }
-  @keyframes scrollLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  @keyframes scrollLeft { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+  @keyframes scrollRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
 
   /* FAQ */
   .faq-section { max-width: 700px; margin: 0 auto; padding: 0 1.5rem 4rem; }
@@ -189,13 +190,20 @@
 
     .plans-carousel-wrap {
       position: relative;
-      overflow: hidden;
-      overflow-x: hidden;
+      overflow: visible;
       padding: 0 0 0.5rem;
       touch-action: pan-y pinch-zoom;
-      /* Force wrap to size itself by its content height */
       display: block;
       width: 100%;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* Clips slides horizontally but lets box-shadow glow escape vertically */
+    .plans-carousel-clip {
+      overflow: hidden;
+      width: 100%;
+      padding: 4px 0 8px;
     }
 
     .plans-carousel-track {
@@ -205,6 +213,14 @@
       width: 100%;
       transition: transform 0.42s cubic-bezier(0.25, 0.46, 0.45, 0.94);
       will-change: transform;
+      /* Allow glow to bleed out vertically */
+      overflow: visible;
+    }
+
+    /* A clipping shell around just the track to hide horizontal slide overflow */
+    .plans-carousel-clip {
+      overflow: hidden;
+      width: 100%;
     }
 
     .plans-carousel-slide {
@@ -213,7 +229,7 @@
       min-width: 100%;
       max-width: 100%;
       direction: rtl;
-      padding: 0 1.4rem;
+      padding: 12px 1.4rem 16px;
       box-sizing: border-box;
     }
 
@@ -225,6 +241,11 @@
       position: relative;
       overflow: visible;
       box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+      /* Prevent text selection on tap for mobile pop effect */
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
     }
 
     .plans-carousel-slide .plan-card.best {
@@ -233,7 +254,17 @@
       box-shadow: 0 0 0 1.5px rgba(0,194,203,0.4), 0 12px 48px rgba(0,194,203,0.15), 0 8px 40px rgba(0,0,0,0.35);
     }
 
-    .plans-carousel-slide .plan-name { font-size: 16px; margin-bottom: 1.2rem; }
+    .plans-carousel-slide .plan-card.card-active {
+      transform: scale(1.03);
+      box-shadow: 0 0 0 2px var(--cyan), 0 0 32px rgba(0,194,203,0.5), 0 8px 40px rgba(0,0,0,0.35) !important;
+      border-color: var(--cyan) !important;
+      z-index: 10;
+    }
+
+    .plans-carousel-slide .plan-card.card-dimmed {
+      transform: scale(0.97);
+      opacity: 0.72;
+    }
     .plans-carousel-slide .plan-price { font-size: 56px; }
     .plans-carousel-slide .plan-price sub { font-size: 18px; }
     .plans-carousel-slide .plan-btn {
@@ -779,11 +810,12 @@
 <!-- MOBILE SWIPEABLE CAROUSEL -->
 <div class="plans-carousel-wrap" id="plansCarousel">
   <div class="swipe-hint">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-    اسحب للتنقل بين الباقات
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    اسحب للتنقل بين الباقات
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
   </div>
-  <div class="plans-carousel-track" id="plansTrack">
+  <div class="plans-carousel-clip">
+    <div class="plans-carousel-track" id="plansTrack">
     <div class="plans-carousel-slide">
       <div class="plan-card">
         <p class="plan-name">شهر واحد</p>
@@ -813,6 +845,7 @@
       </div>
     </div>
   </div>
+  </div><!-- /plans-carousel-clip -->
   <div class="plans-dots" id="plansDots">
     <button class="plans-dot active" data-index="0"></button>
     <button class="plans-dot" data-index="1"></button>
@@ -1096,19 +1129,46 @@ function toggleFaq(btn) {
   }
 }
 
-// Plan card click: glow + scale hierarchy (toggle)
+// Plan card tap: glow + scale hierarchy (toggle)
+// Uses touchstart/touchend for instant response on mobile — no hold, no text selection
 const planCards = document.querySelectorAll('.plan-card');
+
+function activatePlanCard(card) {
+  const isAlreadyActive = card.classList.contains('card-active');
+  planCards.forEach(c => { c.classList.remove('card-active', 'card-dimmed'); });
+  if (!isAlreadyActive) {
+    card.classList.add('card-active');
+    planCards.forEach(c => { if (c !== card) c.classList.add('card-dimmed'); });
+  }
+}
+
 planCards.forEach(card => {
-  card.addEventListener('click', (e) => {
-    // Don't toggle if clicking the subscribe button itself
+  let tapStartX = 0, tapStartY = 0;
+
+  // Touch: fires instantly on finger down, with swipe guard
+  card.addEventListener('touchstart', function(e) {
+    tapStartX = e.touches[0].clientX;
+    tapStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  card.addEventListener('touchend', function(e) {
+    const dx = Math.abs(e.changedTouches[0].clientX - tapStartX);
+    const dy = Math.abs(e.changedTouches[0].clientY - tapStartY);
+    // Only fire if it's a genuine tap (not a swipe)
+    if (dx < 12 && dy < 12) {
+      // Don't activate if tapping the subscribe button itself
+      if (e.target.classList.contains('plan-btn') || e.target.closest('.plan-btn')) return;
+      e.preventDefault();
+      activatePlanCard(card);
+    }
+  }, { passive: false });
+
+  // Mouse fallback for desktop (still works with click)
+  card.addEventListener('click', function(e) {
     if (e.target.classList.contains('plan-btn') || e.target.closest('.plan-btn')) return;
-    const isAlreadyActive = card.classList.contains('card-active');
-    // Always clear all first
-    planCards.forEach(c => { c.classList.remove('card-active', 'card-dimmed'); });
-    // If was not active → activate it; if was active → leave all cleared (deselect)
-    if (!isAlreadyActive) {
-      card.classList.add('card-active');
-      planCards.forEach(c => { if (c !== card) c.classList.add('card-dimmed'); });
+    // Only run on non-touch devices (touch already handled above)
+    if (!('ontouchstart' in window)) {
+      activatePlanCard(card);
     }
   });
 });
@@ -1217,7 +1277,7 @@ if(carouselTrack) {
     if (isVertical) return;
     e.preventDefault();
     dragDelta = dx;
-    // LTR forced: swipe left (dx negative) = advance to next card
+    // Track is LTR: swipe left (dx negative) = advance forward in track = next card
     track.style.transform = 'translateX(' + (-(current * W()) + dx) + 'px)';
   }, { passive: false });
 
@@ -1225,7 +1285,7 @@ if(carouselTrack) {
     if (!isDragging || isVertical) { isDragging = false; return; }
     isDragging = false;
     var threshold = W() * 0.2;
-    // dx negative = swiped left = go to next slide
+    // Track is LTR: swipe LEFT (dx negative) = go to next slide, swipe RIGHT (dx positive) = go to previous
     if (dragDelta < -threshold)      goTo(current + 1);
     else if (dragDelta > threshold)  goTo(current - 1);
     else                             goTo(current);
